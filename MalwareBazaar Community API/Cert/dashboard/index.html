@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>maCERT – Bulletins de Sécurité DGSSI</title>
+  <meta name="description" content="Dashboard interactif des bulletins de sécurité publiés par la DGSSI / maCERT"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:          #0a0f1e;
+      --bg-card:     #111827;
+      --bg-card2:    #1a2235;
+      --accent:      #3b82f6;
+      --accent2:     #6366f1;
+      --accent3:     #22d3ee;
+      --critical:    #ef4444;
+      --important:   #f59e0b;
+      --modere:      #22c55e;
+      --text:        #e2e8f0;
+      --text-muted:  #94a3b8;
+      --border:      #1e3a5f;
+      --radius:      12px;
+      --shadow:      0 4px 24px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
+
+    /* ─── HEADER ─── */
+    header{
+      background:linear-gradient(135deg,#0d1529 0%,#0a1628 50%,#0f172a 100%);
+      border-bottom:1px solid var(--border);
+      padding:20px 32px;
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      position:sticky;top:0;z-index:100;
+      backdrop-filter:blur(12px);
+    }
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo-icon{
+      width:44px;height:44px;border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex;align-items:center;justify-content:center;font-size:22px;
+    }
+    .logo-text h1{font-size:1.25rem;font-weight:700;letter-spacing:-0.01em}
+    .logo-text p{font-size:.75rem;color:var(--text-muted);margin-top:2px}
+    #last-run-badge{
+      background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);
+      color:#93c5fd;padding:7px 14px;border-radius:20px;font-size:.78rem;
+      display:flex;align-items:center;gap:6px;white-space:nowrap;
+    }
+
+    /* ─── STATS BAR ─── */
+    .stats-bar{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+      padding:24px 32px 0;
+    }
+    .stat-card{
+      background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+      padding:20px;display:flex;flex-direction:column;gap:6px;
+      transition:transform .2s,border-color .2s;
+    }
+    .stat-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+    .stat-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted)}
+    .stat-value{font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .stat-sub{font-size:.75rem;color:var(--text-muted)}
+
+    /* ─── CONTROLS ─── */
+    .controls{
+      padding:20px 32px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+    }
+    .search-wrap{flex:1;min-width:220px;position:relative}
+    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.45;font-size:16px}
+    #search{
+      width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
+      padding:10px 12px 10px 38px;color:var(--text);font-size:.875rem;font-family:'Inter',sans-serif;
+      transition:border-color .2s;outline:none;
+    }
+    #search:focus{border-color:var(--accent)}
+    select{
+      background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
+      padding:10px 14px;color:var(--text);font-size:.875rem;font-family:'Inter',sans-serif;
+      cursor:pointer;outline:none;min-width:160px;
+    }
+    select:focus{border-color:var(--accent)}
+    .btn{
+      background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+      border:none;border-radius:8px;padding:10px 18px;font-size:.875rem;font-weight:600;
+      cursor:pointer;font-family:'Inter',sans-serif;transition:opacity .2s,transform .2s;
+    }
+    .btn:hover{opacity:.9;transform:translateY(-1px)}
+    #count-label{font-size:.82rem;color:var(--text-muted);white-space:nowrap}
+
+    /* ─── TABLE ─── */
+    .table-wrap{padding:0 32px 32px;overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.855rem}
+    thead th{
+      background:var(--bg-card2);color:var(--text-muted);font-weight:600;font-size:.72rem;
+      text-transform:uppercase;letter-spacing:.07em;padding:12px 16px;text-align:left;
+      border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;
+    }
+    thead th:hover{color:var(--text)}
+    thead th .sort-icon{margin-left:4px;opacity:.4;font-size:.8em}
+    thead th.sorted .sort-icon{opacity:1;color:var(--accent)}
+    tbody tr{
+      border-bottom:1px solid rgba(30,58,95,.4);
+      transition:background .15s;cursor:pointer;
+    }
+    tbody tr:hover{background:var(--bg-card2)}
+    tbody td{padding:13px 16px;vertical-align:top}
+    .td-date{white-space:nowrap;color:var(--text-muted);font-size:.8rem;min-width:100px}
+    .td-title{font-weight:500;line-height:1.4;max-width:420px}
+    .td-title a{color:var(--text);text-decoration:none}
+    .td-title a:hover{color:var(--accent3)}
+    .badge{
+      display:inline-block;padding:3px 9px;border-radius:20px;font-size:.7rem;
+      font-weight:600;white-space:nowrap;
+    }
+    .b-critical{background:rgba(239,68,68,.15);color:#fca5a5}
+    .b-important{background:rgba(245,158,11,.15);color:#fcd34d}
+    .b-modere{background:rgba(34,197,94,.15);color:#86efac}
+    .b-unknown{background:rgba(148,163,184,.1);color:#94a3b8}
+    .cve-count{
+      background:rgba(99,102,241,.15);color:#a5b4fc;
+      border-radius:16px;padding:2px 9px;font-size:.72rem;font-weight:600;
+    }
+    .pdf-link{
+      color:var(--accent3);font-size:.75rem;text-decoration:none;margin-right:6px;
+      transition:color .15s;
+    }
+    .pdf-link:hover{color:#fff}
+
+    /* ─── MODAL ─── */
+    .modal-overlay{
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+      z-index:200;align-items:center;justify-content:center;padding:20px;
+      backdrop-filter:blur(4px);
+    }
+    .modal-overlay.open{display:flex}
+    .modal{
+      background:var(--bg-card);border:1px solid var(--border);border-radius:16px;
+      max-width:720px;width:100%;max-height:90vh;overflow-y:auto;
+      box-shadow:var(--shadow);animation:pop .2s ease;
+    }
+    @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+    .modal-header{
+      padding:24px 28px 18px;border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+    }
+    .modal-header h2{font-size:1rem;font-weight:600;line-height:1.4}
+    .modal-close{
+      background:none;border:none;color:var(--text-muted);font-size:1.4rem;
+      cursor:pointer;padding:0;line-height:1;flex-shrink:0;
+    }
+    .modal-close:hover{color:var(--text)}
+    .modal-body{padding:24px 28px}
+    .modal-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+    .modal-pill{
+      background:var(--bg-card2);border:1px solid var(--border);
+      border-radius:8px;padding:8px 14px;font-size:.78rem;
+    }
+    .modal-pill label{color:var(--text-muted);display:block;font-size:.68rem;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em}
+    .section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .cve-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+    .cve-tag{
+      background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);
+      color:#a5b4fc;border-radius:6px;padding:4px 10px;font-size:.73rem;
+      font-family:monospace;letter-spacing:.02em;
+    }
+    .pdf-item{
+      display:flex;align-items:center;gap:8px;padding:10px 14px;
+      background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;
+      margin-bottom:8px;text-decoration:none;color:var(--text);transition:border-color .2s;
+      font-size:.82rem;
+    }
+    .pdf-item:hover{border-color:var(--accent)}
+    .empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
+    .empty-icon{font-size:3rem;margin-bottom:12px}
+
+    /* ─── LOADING ─── */
+    #loading{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:80px 20px;gap:14px;
+    }
+    .spinner{
+      width:40px;height:40px;border:3px solid var(--border);
+      border-top-color:var(--accent);border-radius:50%;
+      animation:spin .7s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ─── RESPONSIVE ─── */
+    @media(max-width:768px){
+      .stats-bar{grid-template-columns:repeat(2,1fr)}
+      header{flex-direction:column;align-items:flex-start}
+      .controls{flex-direction:column}
+      select,#search{width:100%}
+      .table-wrap{padding:0 12px 24px}
+      .stats-bar,.controls{padding-left:12px;padding-right:12px}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div class="logo-text">
+      <h1>maCERT · Bulletins DGSSI</h1>
+      <p>Direction Générale de la Sécurité des Systèmes d'Information</p>
+    </div>
+  </div>
+  <div id="last-run-badge">🕐 Dernier run : <span id="last-run-val">—</span></div>
+</header>
+
+<div class="stats-bar">
+  <div class="stat-card">
+    <span class="stat-label">Total bulletins</span>
+    <span class="stat-value" id="stat-total">—</span>
+    <span class="stat-sub">dans le JSONL</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">CVEs référencées</span>
+    <span class="stat-value" id="stat-cves">—</span>
+    <span class="stat-sub">identifiants uniques</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Derniers 30 jours</span>
+    <span class="stat-value" id="stat-recent">—</span>
+    <span class="stat-sub">bulletins récents</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Bulletins affichés</span>
+    <span class="stat-value" id="stat-shown">—</span>
+    <span class="stat-sub">après filtres</span>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search" placeholder="Rechercher titre, CVE, produit…"/>
+  </div>
+  <select id="filter-date">
+    <option value="">Toutes dates</option>
+    <option value="7">7 derniers jours</option>
+    <option value="30">30 derniers jours</option>
+    <option value="90">90 derniers jours</option>
+    <option value="365">Cette année</option>
+  </select>
+  <select id="filter-cve">
+    <option value="">Tous (avec/sans CVE)</option>
+    <option value="has">Avec CVEs</option>
+    <option value="none">Sans CVE</option>
+  </select>
+  <select id="sort-by">
+    <option value="date-desc">Date ↓</option>
+    <option value="date-asc">Date ↑</option>
+    <option value="cves-desc">CVEs ↓</option>
+    <option value="title-asc">Titre A→Z</option>
+  </select>
+  <button class="btn" id="btn-reset">↺ Réinitialiser</button>
+  <span id="count-label"></span>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <span style="color:var(--text-muted);font-size:.9rem">Chargement des bulletins…</span>
+</div>
+
+<div class="table-wrap" id="table-wrap" style="display:none">
+  <table id="main-table">
+    <thead>
+      <tr>
+        <th data-col="date">Date <span class="sort-icon">↕</span></th>
+        <th data-col="title">Titre <span class="sort-icon">↕</span></th>
+        <th data-col="cves">CVEs <span class="sort-icon">↕</span></th>
+        <th>PDFs</th>
+        <th data-col="fetched">Récupéré <span class="sort-icon">↕</span></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div id="empty-state" class="empty" style="display:none">
+    <div class="empty-icon">🔎</div>
+    <div>Aucun bulletin ne correspond à vos critères.</div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button class="modal-close" id="modal-close" aria-label="Fermer">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row" id="modal-meta"></div>
+      <div id="modal-cves-section"></div>
+      <div id="modal-pdfs-section"></div>
+      <div style="margin-top:12px">
+        <a id="modal-url" href="#" target="_blank" style="color:var(--accent3);font-size:.82rem;text-decoration:none">
+          🔗 Voir le bulletin sur dgssi.gov.ma ↗
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Utility: fix mojibake (Latin-1 mis-decoded as UTF-8)
+function fixEncoding(str) {
+  if (!str) return str;
+  try {
+    const bytes = new Uint8Array(str.split('').map(c => c.charCodeAt(0)));
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch(e) { return str; }
+}
+
+// ─── Load data
+const JSONL_PATH = '../dgssi_bulletins.jsonl';
+const LAST_RUN_PATH = '../last_run.csv';
+
+let allBulletins = [];
+let filtered = [];
+let sortCol = 'date';
+let sortDir = 'desc';
+
+async function loadLastRun() {
+  try {
+    const r = await fetch(LAST_RUN_PATH);
+    const txt = (await r.text()).trim();
+    document.getElementById('last-run-val').textContent = txt || '—';
+  } catch(e) { /* ignore */ }
+}
+
+async function loadBulletins() {
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('table-wrap').style.display = 'none';
+
+  let text = '';
+  try {
+    const r = await fetch(JSONL_PATH);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    text = await r.text();
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      `<div class="empty-icon">⚠️</div><div style="color:var(--critical)">Impossible de charger ${JSONL_PATH}<br><small>${e.message}</small></div>`;
+    return;
+  }
+
+  const lines = text.trim().split('\n');
+  allBulletins = [];
+  const cveSet = new Set();
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    try {
+      const b = JSON.parse(line);
+      b.title = fixEncoding(b.title || '');
+      b.cves = b.cves || [];
+      b.pdfs = b.pdfs || [];
+      b.cves.forEach(c => cveSet.add(c));
+      allBulletins.push(b);
+    } catch(e) { /* skip bad lines */ }
+  }
+
+  // Stats
+  const now = new Date();
+  const recent = allBulletins.filter(b => {
+    if (!b.date) return false;
+    return (now - new Date(b.date)) <= 30 * 86400000;
+  }).length;
+
+  document.getElementById('stat-total').textContent = allBulletins.length.toLocaleString('fr-FR');
+  document.getElementById('stat-cves').textContent = cveSet.size.toLocaleString('fr-FR');
+  document.getElementById('stat-recent').textContent = recent.toLocaleString('fr-FR');
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('table-wrap').style.display = 'block';
+
+  applyFilters();
+}
+
+// ─── Detect risk level from title keywords
+function riskBadge(b) {
+  const t = (b.title || '').toLowerCase();
+  if (t.includes('critique') || t.includes('zero-day') || t.includes('activement exploit'))
+    return '<span class="badge b-critical">Critique</span>';
+  if (t.includes('important'))
+    return '<span class="badge b-important">Important</span>';
+  if (t.includes('modéré') || t.includes('modere'))
+    return '<span class="badge b-modere">Modéré</span>';
+  return '<span class="badge b-unknown">—</span>';
+}
+
+// ─── Render
+function render() {
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty-state');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('stat-shown').textContent = '0';
+    return;
+  }
+  empty.style.display = 'none';
+  document.getElementById('stat-shown').textContent = filtered.length.toLocaleString('fr-FR');
+
+  const rows = filtered.map((b, i) => {
+    const dateStr = b.date ? b.date.substring(0, 10) : '<em style="opacity:.4">—</em>';
+    const cveN = b.cves.length;
+    const pdfLinks = b.pdfs.slice(0, 2).map(p =>
+      `<a class="pdf-link" href="${p}" target="_blank" title="${p}">📄</a>`
+    ).join('');
+    const fetched = b.fetched_at ? b.fetched_at.substring(0,16).replace('T',' ') : '—';
+    return `<tr data-idx="${i}">
+      <td class="td-date">${dateStr}</td>
+      <td class="td-title"><a href="${b.url}" target="_blank" onclick="event.stopPropagation()">${b.title || b.url}</a> ${riskBadge(b)}</td>
+      <td class="td-date">${cveN > 0 ? `<span class="cve-count">${cveN}</span>` : '<span style="opacity:.3">0</span>'}</td>
+      <td class="td-date">${pdfLinks || '<span style="opacity:.25">—</span>'}</td>
+      <td class="td-date" style="font-size:.72rem">${fetched}</td>
+    </tr>`;
+  }).join('');
+
+  tbody.innerHTML = rows;
+
+  tbody.querySelectorAll('tr').forEach(tr => {
+    tr.addEventListener('click', () => openModal(filtered[+tr.dataset.idx]));
+  });
+}
+
+// ─── Filters & sort
+function applyFilters() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const days = parseInt(document.getElementById('filter-date').value) || 0;
+  const cveF = document.getElementById('filter-cve').value;
+  const now = new Date();
+  const sortVal = document.getElementById('sort-by').value;
+  const [sc, sd] = sortVal.split('-');
+  sortCol = sc; sortDir = sd;
+
+  filtered = allBulletins.filter(b => {
+    // search
+    if (q) {
+      const hay = (b.title + ' ' + b.cves.join(' ')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    // date
+    if (days && b.date) {
+      const diff = now - new Date(b.date);
+      if (diff > days * 86400000) return false;
+    } else if (days && !b.date) return false;
+    // cve
+    if (cveF === 'has' && b.cves.length === 0) return false;
+    if (cveF === 'none' && b.cves.length > 0) return false;
+    return true;
+  });
+
+  // sort
+  filtered.sort((a,b) => {
+    let va, vb;
+    if (sortCol === 'date') {
+      va = a.date || ''; vb = b.date || '';
+    } else if (sortCol === 'cves') {
+      va = a.cves.length; vb = b.cves.length;
+    } else if (sortCol === 'title') {
+      va = a.title || ''; vb = b.title || '';
+    } else if (sortCol === 'fetched') {
+      va = a.fetched_at || ''; vb = b.fetched_at || '';
+    }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  document.getElementById('count-label').textContent = `${filtered.length} bulletin${filtered.length !== 1 ? 's' : ''}`;
+  render();
+}
+
+// ─── Modal
+function openModal(b) {
+  document.getElementById('modal-title').textContent = b.title || b.url;
+  document.getElementById('modal-url').href = b.url;
+
+  const metaEl = document.getElementById('modal-meta');
+  metaEl.innerHTML = `
+    <div class="modal-pill"><label>Date</label>${b.date || '—'}</div>
+    <div class="modal-pill"><label>CVEs</label>${b.cves.length}</div>
+    <div class="modal-pill"><label>PDFs</label>${b.pdfs.length}</div>
+    <div class="modal-pill"><label>Récupéré</label>${(b.fetched_at||'—').replace('T',' ')}</div>
+  `;
+
+  const cveSec = document.getElementById('modal-cves-section');
+  if (b.cves.length) {
+    cveSec.innerHTML = `<div class="section-title">🔴 Identifiants CVE</div>
+      <div class="cve-grid">${b.cves.map(c =>
+        `<span class="cve-tag"><a href="https://nvd.nist.gov/vuln/detail/${c}" target="_blank" style="color:inherit;text-decoration:none">${c}</a></span>`
+      ).join('')}</div>`;
+  } else {
+    cveSec.innerHTML = '<div style="color:var(--text-muted);font-size:.82rem;margin-bottom:16px">Aucun CVE référencé</div>';
+  }
+
+  const pdfSec = document.getElementById('modal-pdfs-section');
+  if (b.pdfs.length) {
+    pdfSec.innerHTML = `<div class="section-title">📄 Bulletins PDF</div>` +
+      b.pdfs.map(p => {
+        const name = decodeURIComponent(p.split('/').pop());
+        return `<a class="pdf-item" href="${p}" target="_blank">📎 <span>${name}</span></a>`;
+      }).join('');
+  } else {
+    pdfSec.innerHTML = '';
+  }
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+// ─── Event listeners
+document.getElementById('search').addEventListener('input', applyFilters);
+document.getElementById('filter-date').addEventListener('change', applyFilters);
+document.getElementById('filter-cve').addEventListener('change', applyFilters);
+document.getElementById('sort-by').addEventListener('change', applyFilters);
+document.getElementById('btn-reset').addEventListener('click', () => {
+  document.getElementById('search').value = '';
+  document.getElementById('filter-date').value = '';
+  document.getElementById('filter-cve').value = '';
+  document.getElementById('sort-by').value = 'date-desc';
+  applyFilters();
+});
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ─── Init
+loadLastRun();
+loadBulletins();
+</script>
+</body>
+</html>

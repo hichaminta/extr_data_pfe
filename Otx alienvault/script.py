@@ -4,21 +4,20 @@ import os
 import csv
 from datetime import datetime, timedelta, timezone
 from OTXv2 import OTXv2
+from dotenv import load_dotenv
 
 # Configuration
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_JSON = os.path.join(SCRIPT_DIR, "otx_pulses.json")
 TRACKING_FILE = os.path.join(SCRIPT_DIR, "last_run.csv")
-ENV_FILE = os.path.join(SCRIPT_DIR, ".env")
+
+# Charge le .env racine (dossier parent)
+_root = os.path.dirname(SCRIPT_DIR)
+load_dotenv(os.path.join(_root, ".env"))
 
 def get_api_key():
-    """Charge la clé API depuis le fichier .env."""
-    if os.path.exists(ENV_FILE):
-        with open(ENV_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("OTX_API_KEY="):
-                    return line.strip().split("=")[1]
-    return None
+    """Charge la clé API depuis les variables d'environnement."""
+    return os.getenv("OTX_API_KEY")
 
 def get_last_run_date():
     """Récupère la date de la dernière extraction depuis le fichier CSV."""

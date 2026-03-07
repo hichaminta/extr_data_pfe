@@ -7,7 +7,9 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 BASE = "https://services.nvd.nist.gov/rest/json/cves/2.0"
-load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+# Charge le .env racine (dossier parent)
+_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(_root, ".env"))
 API_KEY = os.getenv("NVD_API_KEY")
 TRACKING_FILE = "last_run.csv"
 OUTPUT_JSON = "cve_data.json"
