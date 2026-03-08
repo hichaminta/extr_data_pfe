@@ -1,7 +1,0 @@
-.\.env
-.\AbuseIPDB\.env
-.\MalwareBazaar Community API\AbuseIPDB\.env
-.\MalwareBazaar Community API\nvd_cisa\.env
-.\nvd_cisa\.env
-.\Otx alienvault\.env
-.\ThreatFox\.env
