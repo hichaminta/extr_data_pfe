@@ -5,3 +5,5 @@ https://www.dgssi.gov.ma/fr/bulletins
 https://threatfox-api.abuse.ch/api/v1/
 https://feodotracker.abuse.ch/downloads/ipblocklist.csv
 https://mb-api.abuse.ch/api/v1/
+https://pulsedive.com
+CINS Army
