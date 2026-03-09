@@ -1,7 +1,8 @@
 import json
 import os
 
-FILE_PATH = "cve_data.json"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+FILE_PATH = os.path.join(SCRIPT_DIR, "cve_data.json")
 
 def check_duplicates_in_json():
     print(f"Vérification des doublons dans {FILE_PATH}...\n")

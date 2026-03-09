@@ -3,7 +3,7 @@ import json
 import time
 import os
 import csv
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
 BASE = "https://services.nvd.nist.gov/rest/json/cves/2.0"
@@ -101,7 +101,7 @@ def extract_all(limit=None):
     
     last_date = get_last_run_date()
     # Utilisation du paramètre UTC recommandé par l'API NVD
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     now_str = now.strftime("%Y-%m-%dT%H:%M:%S.000")
     
     params = {
@@ -114,7 +114,11 @@ def extract_all(limit=None):
         params["lastModStartDate"] = last_date
         params["lastModEndDate"] = now_str
     else:
-        print("Aucune date précédente trouvée. Extraction complète.")
+        print("Aucune date précédente trouvée dans last_run.csv.")
+        print("Pour éviter d'extraire toutes les données depuis le début, on utilise une date par défaut (les 7 derniers jours).")
+        default_start = now - timedelta(days=7)
+        params["lastModStartDate"] = default_start.strftime("%Y-%m-%dT%H:%M:%S.000")
+        params["lastModEndDate"] = now_str
 
     print("Début de l'extraction...")
     
