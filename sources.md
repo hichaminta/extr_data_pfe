@@ -7,3 +7,4 @@ https://feodotracker.abuse.ch/downloads/ipblocklist.csv
 https://mb-api.abuse.ch/api/v1/
 https://pulsedive.com
 CINS Army
+https://www.spamhaus.org/
