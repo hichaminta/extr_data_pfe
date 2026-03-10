@@ -19,3 +19,20 @@ THREATFOX_API_KEY=
 # ── Sources sans clé API (publiques) ──────────────────
 # FeodoTracker  →  https://feodotracker.abuse.ch/
 # URLhaus       →  https://urlhaus.abuse.ch/
+
+## Unification des données
+
+Un script central permet maintenant d'unifier les sorties hétérogènes des collecteurs via des adaptateurs et d'extraire automatiquement les entités clés avec des Regex.
+
+Commande :
+
+```bash
+python unify_data.py
+```
+
+Sorties générées dans `unified_output/` :
+
+- `unified_records.jsonl` : enregistrements harmonisés avec `entities.cves` et `entities.iocs`
+- `unified_summary.json` : résumé global par source et type d'enregistrement
+
+Sources actuellement prises en charge par adaptateur : DGSSI, ThreatFox, OTX, AbuseIPDB, NVD/CISA, OpenPhish, FeodoTracker, MalwareBazaar, VirusTotal, CINS Army, Spamhaus, URLhaus et Pulsedive.
