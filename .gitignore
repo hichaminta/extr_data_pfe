@@ -1,6 +1,7 @@
 .env
-
+*.tmp
 *.json
 *.gz
 *.zip
 *.log
+*.tmp
